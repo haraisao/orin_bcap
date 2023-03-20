@@ -1,2 +1,1 @@
-# orin_bcap
-orin_bcap for ROS2
+# denso_robot_common
