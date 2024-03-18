@@ -4,12 +4,15 @@ cmake_minimum_required(VERSION 3.5)
 project(orin_bcap)
 
 #add_compile_options( -Wno-write-strings -fcompare-debug-second -g )
-add_compile_options( -Wno-write-strings -fcompare-debug-second )
+add_compile_options( -Wno-write-strings -fcompare-debug-second)
 string(REPLACE ":" ";" CMAKE_PREFIX_PATH $ENV{AMENT_PREFIX_PATH})
 
 option  (_USE_LINUX_API      "Use Linux API"   ON)
 message (STATUS "_USE_LINUX_API=${_USE_LINUX_API}")
-option (BUILD_SHARED_LIBS "Build as a shared library" OFF)
+option (BUILD_SHARED_LIBS "Build as a shared library" ON)
+
+set(_DN_USE_VARIANT_API ON)
+set(_DN_USE_BSTR_API ON)
 
 message (STATUS "_DN_USE_VARIANT_API=${_DN_USE_VARIANT_API}")
 message (STATUS "_DN_USE_BSTR_API=${_DN_USE_BSTR_API}")
@@ -29,12 +32,18 @@ else(_DN_USE_BSTR_API)
   add_definitions(-D_DN_USE_BSTR_API=0)
 endif(_DN_USE_BSTR_API)
 
+if(BUILD_SHARED_LIBS)
+  set(SHARED_LIB SHARED)
+else(BUILD_SHARED_LIBS)
+  set(SHARED_LIB STATIC)
+endif(BUILD_SHARED_LIBS)
+
 find_package(ament_cmake REQUIRED)
 
 set(BCAP_LIBRARIES bcap_client pthread)
 include_directories(include)
 
-add_library(bcap_client
+add_library(bcap_client ${SHARED_LIB}
   src/bCAPClient/bcap_client.c
   src/bcap_common.c
   src/dn_com.c
@@ -59,7 +68,7 @@ if(_USE_LINUX_API)
 endif(_USE_LINUX_API)
 
 # bcap_server library
-add_library(bcap_server
+add_library(bcap_server ${SHARED_LIB}
   src/bCAPServer/bcap_server.c
   src/bcap_common.c
   src/dn_com.c
@@ -72,8 +81,9 @@ add_library(bcap_server
 )
 
 target_include_directories(bcap_server PUBLIC
-  include/bCAPServer
+  #include/bCAPServer
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/bCAPServer>
   $<INSTALL_INTERFACE:include>
 )
 
@@ -84,19 +94,20 @@ if(_USE_LINUX_API)
 endif(_USE_LINUX_API)
 
 # rac_string library
-add_library(rac_string
+add_library(rac_string ${SHARED_LIB}
   src/RACString/rac_string.c
   src/dn_common.c
 )
 
 target_include_directories(rac_string PUBLIC
-  include/RACString
+	#include/RACString
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/RACString>
   $<INSTALL_INTERFACE:include>
 )
 
 # tpcomm library
-add_library(tpcomm
+add_library(tpcomm ${SHARED_LIB}
   src/TPComm/dn_tpcomm.c
   src/dn_com.c
   src/dn_common.c
@@ -108,8 +119,9 @@ add_library(tpcomm
 )
 
 target_include_directories(tpcomm PUBLIC
-  include/TPComm
+	#include/TPComm
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/TPComm>
   $<INSTALL_INTERFACE:include>
 )
 
